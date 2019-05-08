@@ -9,7 +9,9 @@
     </div>
     <div>
       <img class="screenshot-image" v-bind:src="screenshotImage" />
-      <a :href="screenshotImage" v-if="!showVideo" download="screenshot.jpeg">ダウンロード</a>
+      <a :href="screenshotImage" v-if="!showVideo" download="screenshot.jpeg"
+        >ダウンロード</a
+      >
     </div>
   </div>
 </template>
@@ -74,9 +76,11 @@ export default Vue.extend({
       if (canvas) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
-        this.screenshotImage = canvas.toDataURL("image/jpeg");
-        this.showVideo = false;
+        const context2d = canvas.getContext("2d");
+        if (context2d) {
+          this.screenshotImage = canvas.toDataURL("image/jpeg");
+          this.showVideo = false;
+        }
       }
     }
   }
