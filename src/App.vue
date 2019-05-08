@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div>
-      <video ref="video" autoplay v-if="showVideo" />
+      <video ref="video" autoplay muted v-if="showVideo" />
       <canvas ref="canvas" style="display: none" />
       <div>
         <button @click="onScreenshot" v-if="showVideo">撮影</button>
