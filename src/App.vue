@@ -1,71 +1,51 @@
 <template>
   <div id="app">
-    <div>
-      <video ref="video" autoplay muted v-if="showVideo" />
-      <canvas ref="canvas" style="display: none" />
-      <div>
-        <button @click="onScreenshot" v-if="showVideo">撮影</button>
-      </div>
+    <div class="camera" v-show="showVideo">
+      <video ref="video" playsinline autoplay muted />
+      <button @click="onScreenshot">写真を撮る</button>
     </div>
-    <div>
-      <img class="screenshot-image" v-bind:src="screenshotImage" />
-      <a :href="screenshotImage" v-if="!showVideo" download="screenshot.jpeg"
-        >ダウンロード</a
-      >
+    <div class="photo" v-show="!showVideo">
+      <canvas ref="canvas" />
+      <button @click="onBack">撮影に戻る</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
+import "ress";
+
+const initialConstraints = {
+  audio: false,
+  video: {
+    facingMode: "environment"
+  }
+};
 
 export default Vue.extend({
   name: "app",
   data() {
     return {
-      options: [] as MediaDeviceInfo[],
-      selectedCamera: "",
-      streamStarted: false,
-      streamMedia: new MediaStream(),
-      screenshotImage: "",
-      showVideo: true,
-      constraints: {
-        video: {
-          width: {
-            min: 640,
-            ideal: 1920,
-            max: 2560
-          },
-          height: {
-            min: 480,
-            ideal: 1080,
-            max: 1440
-          }
-        }
-      }
+      showVideo: true
     };
   },
-  computed: {},
   async mounted() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      this.selectedCamera = devices.filter(
+      const videoDevices = devices.filter(
         device => device.kind === "videoinput"
-      )[0].deviceId;
+      );
 
       const constraints = {
-        ...this.constraints,
+        ...initialConstraints,
         deviceId: {
-          exact: this.selectedCamera
+          exact: videoDevices[0].deviceId
         }
       };
 
-      this.streamMedia = await navigator.mediaDevices.getUserMedia(constraints);
       const video = this.$refs.video as HTMLVideoElement;
-      video.srcObject = this.streamMedia;
-      this.streamStarted = true;
+      video.srcObject = await navigator.mediaDevices.getUserMedia(constraints);
     } catch (error) {
-      this.streamStarted = false;
       console.error(error);
     }
   },
@@ -78,28 +58,48 @@ export default Vue.extend({
         canvas.height = video.videoHeight;
         const context2d = canvas.getContext("2d");
         if (context2d) {
-          this.screenshotImage = canvas.toDataURL("image/jpeg");
+          context2d.drawImage(video, 0, 0);
           this.showVideo = false;
         }
       }
+    },
+    onBack() {
+      this.showVideo = true;
     }
   }
 });
 </script>
 
 <style lang="scss">
+body {
+  background: #333;
+}
+
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-  display: flex;
-  flex-direction: column;
 
-  > a {
-    display: inline-block;
+  .camera,
+  .photo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  button {
+    padding: 14px 24px;
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    border: 3px solid #fff;
+  }
+
+  video,
+  canvas {
+    width: 100%;
+    height: auto;
+    margin-bottom: 30px;
   }
 }
 </style>
