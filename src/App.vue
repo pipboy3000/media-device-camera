@@ -14,6 +14,7 @@
 <script lang="ts">
 import Vue from "vue";
 import "ress";
+import * as mobilenet from "@tensorflow-models/mobilenet";
 
 const initialConstraints = {
   audio: false,
@@ -26,7 +27,9 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      showVideo: true
+      showVideo: true,
+      videoTrack: {},
+      imageCapture: {}
     };
   },
   async mounted() {
@@ -44,7 +47,12 @@ export default Vue.extend({
       };
 
       const video = this.$refs.video as HTMLVideoElement;
-      video.srcObject = await navigator.mediaDevices.getUserMedia(constraints);
+      const mediaStream = await navigator.mediaDevices.getUserMedia(
+        constraints
+      );
+      video.srcObject = mediaStream;
+      this.videoTrack = mediaStream.getVideoTracks()[0];
+      this.imageCapture = new ImageCapture(this.videoTrack);
     } catch (error) {
       console.error(error);
     }
@@ -53,13 +61,18 @@ export default Vue.extend({
     onScreenshot: async function() {
       const canvas = this.$refs.canvas as HTMLCanvasElement;
       const video = this.$refs.video as HTMLVideoElement;
+      const blob = await this.imageCapture.takePhoto();
+      const image = await createImageBitmap(blob);
       if (canvas) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const context2d = canvas.getContext("2d");
         if (context2d) {
-          context2d.drawImage(video, 0, 0);
+          context2d.drawImage(image, 0, 0);
           this.showVideo = false;
+          const model = await mobilenet.load();
+          const predictions = await model.classify(canvas);
+          console.log(predictions);
         }
       }
     },

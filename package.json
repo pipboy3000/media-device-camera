@@ -9,6 +9,10 @@
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
+    "@tensorflow-models/coco-ssd": "^1.0.2",
+    "@tensorflow-models/mobilenet": "^1.0.1",
+    "@tensorflow/tfjs": "^1.1.2",
+    "@types/w3c-image-capture": "^1.0.2",
     "core-js": "^2.6.5",
     "ress": "^1.2.2",
     "vue": "^2.6.10"
